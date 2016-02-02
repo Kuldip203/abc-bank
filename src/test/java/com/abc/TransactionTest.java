@@ -1,13 +1,17 @@
 package com.abc;
 
-import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class TransactionTest {
     @Test
-    public void transaction() {
+    public void testTransactionType() {
         Transaction t = new Transaction(5);
-        assertTrue(t instanceof Transaction);
+        Assert.assertEquals(TransactionType.DEPOSIT, t.getTransactionType());
+        
+        t = new Transaction(-5);
+        Assert.assertEquals(TransactionType.WITHDRAW, t.getTransactionType());
+        
     }
 }

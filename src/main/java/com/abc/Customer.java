@@ -1,17 +1,18 @@
 package com.abc;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import static java.lang.Math.abs;
+import com.abc.account.Account;
+import com.abc.account.AccountType;
 
 public class Customer {
     private String name;
-    private List<Account> accounts;
+    private Map<AccountType, Account> mapTypeAccount;
 
     public Customer(String name) {
         this.name = name;
-        this.accounts = new ArrayList<Account>();
+        this.mapTypeAccount = new LinkedHashMap<AccountType, Account>();
     }
 
     public String getName() {
@@ -19,60 +20,49 @@ public class Customer {
     }
 
     public Customer openAccount(Account account) {
-        accounts.add(account);
+        mapTypeAccount.put(account.getAccountType(), account);
         return this;
     }
 
     public int getNumberOfAccounts() {
-        return accounts.size();
+        return mapTypeAccount.size();
     }
 
     public double totalInterestEarned() {
         double total = 0;
-        for (Account a : accounts)
+        for (Account a : mapTypeAccount.values())
             total += a.interestEarned();
         return total;
     }
 
     public String getStatement() {
-        String statement = null;
-        statement = "Statement for " + name + "\n";
-        double total = 0.0;
-        for (Account a : accounts) {
-            statement += "\n" + statementForAccount(a) + "\n";
-            total += a.sumTransactions();
-        }
-        statement += "\nTotal In All Accounts " + toDollars(total);
-        return statement;
+    	return StatementBuilder.buildStatement(name, mapTypeAccount.values());
+    }
+    
+    public boolean transfer(AccountType from , AccountType to, double amount){
+    	Account fromAccount = mapTypeAccount.get(from);
+    	Account toAccount = mapTypeAccount.get(to);
+    	if(isValidTransaction(amount, fromAccount, toAccount)) {
+    		fromAccount.withdraw(amount);
+    		toAccount.deposit(amount);
+    		return true;
+    	}
+    	else {
+    		return false;
+    	}
     }
 
-    private String statementForAccount(Account a) {
-        String s = "";
+	private boolean isValidTransaction(double amount, Account fromAccount,
+			Account toAccount) {
+		
+		if(fromAccount == null || toAccount == null) {
+    		return false;
+    	}
+    	else if(fromAccount.sumTransactions() < amount) {
+    		return false;
+    	}
+		
+		return true;
+	}
 
-       //Translate to pretty account type
-        switch(a.getAccountType()){
-            case Account.CHECKING:
-                s += "Checking Account\n";
-                break;
-            case Account.SAVINGS:
-                s += "Savings Account\n";
-                break;
-            case Account.MAXI_SAVINGS:
-                s += "Maxi Savings Account\n";
-                break;
-        }
-
-        //Now total up all the transactions
-        double total = 0.0;
-        for (Transaction t : a.transactions) {
-            s += "  " + (t.amount < 0 ? "withdrawal" : "deposit") + " " + toDollars(t.amount) + "\n";
-            total += t.amount;
-        }
-        s += "Total " + toDollars(total);
-        return s;
-    }
-
-    private String toDollars(double d){
-        return String.format("$%,.2f", abs(d));
-    }
 }
